@@ -14,23 +14,23 @@ import javax.validation.Valid;
 import java.util.*;
 
 @RestController
-@RequestMapping("/")
-public class CurseController extends JWTController {
+@RequestMapping("/courses")
+public class CurseController {
 
     @Autowired
     private CourseService courseService;
 
-    @GetMapping("courses/all")
+    @GetMapping("/all")
     public ResponseEntity<?> list(){
         return ResponseEntity.ok().body(courseService.findAll());
     }
 
-    @GetMapping("courses")
+    @GetMapping("")
     public ResponseEntity<?> list(Pageable pageable){
         return ResponseEntity.ok().body(courseService.findAll(pageable));
     }
 
-    @GetMapping("courses/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id){
         Optional<Course> optionalStudent = courseService.findById(id);
         if(!optionalStudent.isPresent()){
@@ -39,7 +39,7 @@ public class CurseController extends JWTController {
         return ResponseEntity.ok().body(optionalStudent.get());
     }
 
-    @PostMapping("courses")
+    @PostMapping("")
     public ResponseEntity<?> add(@Valid @RequestBody Course course, BindingResult bindingResult){
         if(bindingResult.hasErrors()){
             return this.validate(bindingResult);
@@ -48,7 +48,7 @@ public class CurseController extends JWTController {
         return ResponseEntity.status(HttpStatus.CREATED).body(courseResponse);
     }
 
-    @PutMapping("courses/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> edit(@Valid @RequestBody Course course, BindingResult bindingResult, @PathVariable Long id){
         if(bindingResult.hasErrors()){
             return this.validate(bindingResult);
@@ -63,7 +63,7 @@ public class CurseController extends JWTController {
         return ResponseEntity.status(HttpStatus.CREATED).body(courseService.save(courseDb));
     }
 
-    @DeleteMapping("courses/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id){
         Optional<Course> optionalStudent = courseService.findById(id);
         if(optionalStudent.isPresent()){
@@ -72,6 +72,14 @@ public class CurseController extends JWTController {
         }else{
             return ResponseEntity.notFound().build();
         }
+    }
+
+    ResponseEntity<?> validate(BindingResult bindingResult){
+        Map<String, Object> errors = new HashMap<>();
+        bindingResult.getFieldErrors().forEach( err -> {
+            errors.put("message", "Field " + err.getField() + ", " + err.getDefaultMessage());
+        });
+        return ResponseEntity.badRequest().body(errors);
     }
 }
 

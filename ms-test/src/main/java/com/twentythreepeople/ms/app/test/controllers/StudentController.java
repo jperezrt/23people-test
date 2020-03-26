@@ -10,26 +10,28 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("student")
-public class StudentController extends JWTController {
+@RequestMapping("/student")
+public class StudentController {
 
     @Autowired
     private StudentService studentService;
 
-    @GetMapping("students/all")
+    @GetMapping("/all")
     public ResponseEntity<?> list(){
         return ResponseEntity.ok().body(studentService.findAll());
     }
 
-    @GetMapping("students")
+    @GetMapping("")
     public ResponseEntity<?> list(Pageable pageable){
         return ResponseEntity.ok().body(studentService.findAll(pageable));
     }
 
-    @GetMapping("students/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id){
         Optional<Student> optionalStudent = studentService.findById(id);
         if(!optionalStudent.isPresent()){
@@ -38,7 +40,7 @@ public class StudentController extends JWTController {
         return ResponseEntity.ok().body(optionalStudent.get());
     }
 
-    @PostMapping("students")
+    @PostMapping("")
     public ResponseEntity<?> add(@Valid @RequestBody Student student, BindingResult bindingResult){
         if(bindingResult.hasErrors()){
             return this.validate(bindingResult);
@@ -47,7 +49,7 @@ public class StudentController extends JWTController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studentResponse);
     }
 
-    @PutMapping("students/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> edit(@Valid @RequestBody Student student, BindingResult bindingResult, @PathVariable Long id){
         if(bindingResult.hasErrors()){
             return this.validate(bindingResult);
@@ -64,7 +66,7 @@ public class StudentController extends JWTController {
         return ResponseEntity.status(HttpStatus.CREATED).body(studentService.save(studentDb));
     }
 
-    @DeleteMapping("students/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id){
         Optional<Student> optionalStudent = studentService.findById(id);
         if(optionalStudent.isPresent()){
@@ -73,6 +75,14 @@ public class StudentController extends JWTController {
         }else{
             return ResponseEntity.notFound().build();
         }
+    }
+
+    ResponseEntity<?> validate(BindingResult bindingResult){
+        Map<String, Object> errors = new HashMap<>();
+        bindingResult.getFieldErrors().forEach( err -> {
+            errors.put("message", "Field " + err.getField() + ", " + err.getDefaultMessage());
+        });
+        return ResponseEntity.badRequest().body(errors);
     }
 }
 
